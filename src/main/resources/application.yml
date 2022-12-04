@@ -1,0 +1,24 @@
+spring:
+
+  datasource:
+    driver-class-name: org.h2.Driver
+    url: jdbc:h2:mem:test;MODE=MySQL;DB_CLOSE_DELAY=-1;MODE=MySQL
+    initialize: true
+    username: sa # database 用戶名
+    password:  # database 密碼    
+    
+  sql:
+    init:
+      encoding: UTF-8
+      mode|: always      
+      
+  jpa:
+    show-sql: true  
+    defer-datasource-initialization: true
+    
+server:
+  servlet:
+    encoding:
+      charset: utf-8
+      force: true
+      enabled: true    
