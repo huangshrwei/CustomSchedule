@@ -9,6 +9,8 @@ import org.springframework.util.CollectionUtils;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestMethod;
+import org.springframework.web.bind.annotation.ResponseBody;
 import org.springframework.web.bind.annotation.RestController;
 
 import com.cron.config.MyScheduledTask;
@@ -32,11 +34,18 @@ public class StartController {
             // 這裡模擬存在資料庫的資料
             list = Arrays.asList(
                     new TaskDto(1, "test1","*/30 * * * * ?")
-                    //,new TaskDto(2, "test2","*/20 * * * * ?")
+                   ,new TaskDto(2, "test2","*/20 * * * * ?")
             );
         scheduledTask.refresh(list);
         return "task:" + list.toString() + "already be executed";
     }
+    
+    @PostMapping(value = "/run")
+    @ResponseBody
+    public String execCron(){
+        scheduledTask.run(3);
+        return "task:" + "3" + "already be executed";
+    }    
 
     @PostMapping(value = "/stopCron")
     public String stopCron(@RequestBody List<TaskDto> list){

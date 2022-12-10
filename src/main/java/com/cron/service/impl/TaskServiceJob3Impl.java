@@ -3,8 +3,11 @@ package com.cron.service.impl;
 import java.text.SimpleDateFormat;
 import java.util.Date;
 
+import org.springframework.stereotype.Service;
+
 import com.cron.service.TaskService;
 
+@Service
 public class TaskServiceJob3Impl  implements TaskService {
     @Override
     public void HandlerJob() {
