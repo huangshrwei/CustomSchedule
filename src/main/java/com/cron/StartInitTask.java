@@ -19,8 +19,8 @@ public class StartInitTask implements CommandLineRunner {
     @Override
     public void run(String... args) throws Exception {
         List<TaskDto> list = Arrays.asList(
-                new TaskDto(1, "test1", "0/20 * *  * * ?")
-                //new TaskDto(2, "test2", "0/30 * *  * * ?")
+                new TaskDto(1, "test1", "0/20 * *  * * ?"),
+                new TaskDto(2, "test2", "0/30 * *  * * ?")
         );
         myScheduledTask.refresh(list);
     }

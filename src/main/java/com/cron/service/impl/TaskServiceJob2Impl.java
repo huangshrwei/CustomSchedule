@@ -11,8 +11,6 @@ import com.cron.service.TaskService;
 public class TaskServiceJob2Impl implements TaskService {
     @Override
     public void HandlerJob() {
-        System.out.println("------job2 start---------："+new Date());
-
         System.out.println(new SimpleDateFormat("yyyy-MM-dd HH:mm:ss").format(new Date()) + " " + Thread.currentThread().getName() + "  task2 start");
         try {
             Thread.sleep(1000);//任務耗時10秒

@@ -1,5 +1,6 @@
 package com.cron.config;
 
+import java.util.Date;
 import java.util.List;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
@@ -8,16 +9,13 @@ import java.util.concurrent.ScheduledFuture;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Configuration;
-import org.springframework.scheduling.annotation.EnableAsync;
 import org.springframework.scheduling.annotation.EnableScheduling;
 import org.springframework.scheduling.annotation.SchedulingConfigurer;
 import org.springframework.scheduling.config.CronTask;
 import org.springframework.scheduling.config.ScheduledTaskRegistrar;
-import org.springframework.stereotype.Component;
 import org.springframework.util.StringUtils;
 
 import com.cron.dto.TaskDto;
-import com.cron.service.TaskService;
 
 import jakarta.annotation.PreDestroy;
 
@@ -32,10 +30,7 @@ public class MyScheduledTask implements SchedulingConfigurer {
 
     @Autowired
     private TaskSolverChooser taskSolverChooser;
-    
-    @Autowired
-    private TaskService taskService;
-    
+   
 
     @Override
     public void configureTasks(ScheduledTaskRegistrar registrar) {
@@ -57,32 +52,49 @@ public class MyScheduledTask implements SchedulingConfigurer {
             }
         }
         for (TaskDto TaskEntity : tasks) {
-            String expression = TaskEntity.getExpression();
-            //計劃任務表示式為空則跳過
-            if(!StringUtils.hasLength(expression)){
-                continue;
-            }
-            //計劃任務已存在並且表示式未發生變化則跳過
-            if (scheduledFutures.containsKey(TaskEntity.getTaskId())
-                    && cronTasks.get(TaskEntity.getTaskId()).getExpression().equals(expression)) {
-                continue;
-            }
-            //如果策略執行時間發生了變化，則取消當前策略的任務
-            if(scheduledFutures.containsKey(TaskEntity.getTaskId())){
-                scheduledFutures.get(TaskEntity.getTaskId()).cancel(false);
-                scheduledFutures.remove(TaskEntity.getTaskId());
-                cronTasks.remove(TaskEntity.getTaskId());
-            }
-            //業務邏輯處理
-            CronTask task = cronTask(TaskEntity, expression);
-
-
-            //執行業務
-            ScheduledFuture<?> future = registrar.getScheduler().schedule(task.getRunnable(), task.getTrigger());
-            cronTasks.put(TaskEntity.getTaskId(), task);
-            scheduledFutures.put(TaskEntity.getTaskId(), future);
+        	if (taskSolverChooser.getTask(TaskEntity.getTaskId())!=null) {
+	            String expression = TaskEntity.getExpression();
+	            //計劃任務表示式為空則跳過
+	            if(!StringUtils.hasLength(expression)){
+	                continue;
+	            }
+	            //計劃任務已存在並且表示式未發生變化則跳過
+	            if (scheduledFutures.containsKey(TaskEntity.getTaskId())
+	                    && cronTasks.get(TaskEntity.getTaskId()).getExpression().equals(expression)) {
+	                continue;
+	            }
+	            //如果策略執行時間發生了變化，則取消當前策略的任務
+	            if(scheduledFutures.containsKey(TaskEntity.getTaskId())){
+	                scheduledFutures.get(TaskEntity.getTaskId()).cancel(false);
+	                scheduledFutures.remove(TaskEntity.getTaskId());
+	                cronTasks.remove(TaskEntity.getTaskId());
+	            }
+	            //業務邏輯處理
+	            CronTask task = cronTask(TaskEntity, expression);
+	
+	
+	            //執行業務
+	            ScheduledFuture<?> future = registrar.getScheduler().schedule(task.getRunnable(), task.getTrigger());
+	            cronTasks.put(TaskEntity.getTaskId(), task);
+	            scheduledFutures.put(TaskEntity.getTaskId(), future);
+        	}
         }
     }
+    
+    /**
+     * 直接執行
+     */
+    @SuppressWarnings("deprecation")
+	public void run(int id){
+    	if (taskSolverChooser.getTask(id)!=null) {
+            //業務邏輯處理
+            CronTask task = onceTask(id);
+            //執行業務
+            ScheduledFuture<?> future = registrar.getScheduler().schedule(task.getRunnable(), new Date());
+            cronTasks.put(id, task);
+            scheduledFutures.put(id, future);
+    	}
+    }    
 
     /**
      * 停止 cron 執行
@@ -107,6 +119,19 @@ public class MyScheduledTask implements SchedulingConfigurer {
                    taskSolverChooser.getTask(TaskEntity.getTaskId()).HandlerJob();
                 }, expression);
     }
+    
+
+    /**
+     * 業務邏輯處理
+     */
+    public CronTask onceTask(int id)  {
+        return new CronTask(() -> {
+                    //每個計劃任務實際需要執行的具體業務邏輯
+                    //採用策略，模式 ，執行我們的job
+                   taskSolverChooser.getTask(id).HandlerJob();
+                }, "* * * * * *");
+    }
+    
 
     private boolean exists(List<TaskDto> tasks, Integer tid){
         for(TaskDto TaskEntity:tasks){
