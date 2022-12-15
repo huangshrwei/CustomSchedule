@@ -1,11 +1,13 @@
 package com.cron.controller;
 
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 import java.util.stream.Collectors;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.util.CollectionUtils;
+import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -28,7 +30,7 @@ public class StartController {
     @Autowired
     private MyScheduledTask scheduledTask;
 
-    @PostMapping(value = "/start")
+    @RequestMapping(value = "/start", method = RequestMethod.GET)
     public String changeCron(){
     	    List<TaskDto> list;
             // 這裡模擬存在資料庫的資料
@@ -40,15 +42,16 @@ public class StartController {
         return "task:" + list.toString() + "already be executed";
     }
     
-    @PostMapping(value = "/run")
+    @RequestMapping(value = "/run/{id}", method = RequestMethod.GET)
     @ResponseBody
-    public String execCron(){
-        scheduledTask.run(3);
-        return "task:" + "3" + "already be executed";
+    public String execCron(@PathVariable("id") int id){
+        scheduledTask.run(id);
+        return "task:" + id + "already be executed";
     }    
 
-    @PostMapping(value = "/stopCron")
-    public String stopCron(@RequestBody List<TaskDto> list){
+    @RequestMapping(value = "/stopCron", method = RequestMethod.GET)
+    public String stopCron(){
+    	List<TaskDto> list = new ArrayList<>();
         if (CollectionUtils.isEmpty(list)) {
             // 這裡模擬將要停止的cron可通過前端傳來
             list = Arrays.asList(
